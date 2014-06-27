@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import datetime
 import sys
 import os
 import glob
 import re
+import yaml
 
 
 def octo_parse(octo_post):
@@ -16,6 +18,8 @@ def octo_parse(octo_post):
     body = []
 
     block_type = None
+
+    frontmatter = ""
 
     with open(octo_post, 'r') as f:
         for l in f.readlines():
@@ -69,13 +73,10 @@ def octo_parse(octo_post):
                 # YAML frontmatter marker
                 fm_count = fm_count + 1
             else:
-                # I'm only interested in date and title from
-                # Octopress frontmatter. Others may want more.
-                m = re.match('^\s*(date|title): (.*?)$', l)
-                if m:
-                    (key, value) = m.groups()
-                    meta[key] = value.strip('" ')
+                frontmatter += l
 
+        meta = yaml.load(frontmatter)
+        print("got meta: {}".format(meta))
         # Pull the date out of the filename
         m = re.search('(\d{4})-(\d{2})-(\d{2})-(.*?).markdown', octo_post)
         if m:
@@ -85,7 +86,11 @@ def octo_parse(octo_post):
                 # if not make something up
                 meta['date'] = "%s/%s/%s 13:37" % (year, month, day)
             else:
-                meta['date'] = meta['date'].replace('-', '/')
+                d = meta['date']
+                # strings sometimes result from the yaml when it has no seconds
+                if not isinstance(d, datetime.datetime):
+                    d = datetime.datetime.strptime(d, "%Y-%m-%d %H:%M")
+                meta['date'] = d.strftime("%Y/%m/%d %H:%M")
             meta['slug'] = slug
             meta['year'] = year
             meta['month'] = month
@@ -115,14 +120,33 @@ def nikola_save(np_dir, meta, body):
     except OSError:
         pass
 
-    newfile = "%s/%s.md" % (meta['slug'], newdir)
+    newfile = "%s/%s.md" % (newdir, meta['slug'])
+    print(" - writing {}".format(newfile))
+
     with open(newfile, 'w') as f:
         f.write('<!--\n')
         for key in ['title', 'date', 'slug']:
-            f.write('.. %s: %s\n' % (key, meta[key]))
-        for key in ['tags', 'link', 'description']:
-            f.write('.. %s:\n' % key)
-        f.write('-->\n')
+            f.write('.. %s: %s\n' % (key, meta[key].encode('utf-8')))
+        for key in ['link', 'description']:
+            f.write('.. %s:\n' % key.encode('utf-8'))
+
+        cs = []
+        if 'categories' in meta and meta['categories'] is not None:
+            cs = meta['categories']
+            if not isinstance(cs, list):
+                cs = [cs]
+        ts = []
+        if 'tags' in meta and meta['tags'] is not None:
+            ts = meta['tags']
+            if not isinstance(ts, list):
+                ts = [ts]
+        print("cs {} ts {}".format(cs, ts))
+        tags = cs + ts
+
+        tagstr = ', '.join([t.strip() for t in tags])
+        f.write('.. tags: {}'.format(tagstr.encode('utf-8')))
+
+        f.write('\n-->\n')
         f.write('\n%s' % body)
 
 
@@ -141,10 +165,10 @@ def main():
     np_dir = sys.argv[2]
 
     for op_file in glob.glob('%s/*.markdown' % op_dir):
+        print("parsing {}".format(op_file))
         (meta, body) = octo_parse(op_file)
         nikola_save(np_dir, meta, body)
 
 
 if __name__ == '__main__':
     main()
-
