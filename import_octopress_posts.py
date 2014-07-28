@@ -78,7 +78,7 @@ def octo_parse(octo_post):
         meta = yaml.load(frontmatter)
         print("got meta: {}".format(meta))
         # Pull the date out of the filename
-        m = re.search('(\d{4})-(\d{2})-(\d{2})-(.*?).markdown', octo_post)
+        m = re.search('(\d{4})-(\d{2})-(\d{2})-(.*?)\.', octo_post)
         if m:
             (year, month, day, slug) = m.groups()
             if "date" not in meta:
