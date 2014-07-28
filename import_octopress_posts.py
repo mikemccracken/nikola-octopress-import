@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import datetime
+import dateutil.parser
 import sys
 import os
 import glob
@@ -89,7 +90,7 @@ def octo_parse(octo_post):
                 d = meta['date']
                 # strings sometimes result from the yaml when it has no seconds
                 if not isinstance(d, datetime.datetime):
-                    d = datetime.datetime.strptime(d, "%Y-%m-%d %H:%M")
+                    d = dateutil.parser.parse(d)
                 meta['date'] = d.strftime("%Y/%m/%d %H:%M")
             meta['slug'] = slug
             meta['year'] = year
