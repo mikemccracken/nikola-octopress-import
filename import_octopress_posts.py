@@ -164,7 +164,7 @@ def main():
     op_dir = sys.argv[1]
     np_dir = sys.argv[2]
 
-    for op_file in glob.glob('%s/*.markdown' % op_dir):
+    for op_file in glob.glob('%s/*' % op_dir):
         print("parsing {}".format(op_file))
         (meta, body) = octo_parse(op_file)
         nikola_save(np_dir, meta, body)
