@@ -78,7 +78,7 @@ def octo_parse(octo_post):
         meta = yaml.load(frontmatter)
         print("got meta: {}".format(meta))
         # Pull the date out of the filename
-        m = re.search('(\d{4})-(\d{2})-(\d{2})-(.*?).markdown', octo_post)
+        m = re.search('(\d{4})-(\d{2})-(\d{2})-(.*?)\.', octo_post)
         if m:
             (year, month, day, slug) = m.groups()
             if "date" not in meta:
@@ -164,7 +164,7 @@ def main():
     op_dir = sys.argv[1]
     np_dir = sys.argv[2]
 
-    for op_file in glob.glob('%s/*.markdown' % op_dir):
+    for op_file in glob.glob('%s/*' % op_dir):
         print("parsing {}".format(op_file))
         (meta, body) = octo_parse(op_file)
         nikola_save(np_dir, meta, body)
