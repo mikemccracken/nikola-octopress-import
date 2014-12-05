@@ -89,7 +89,7 @@ def octo_parse(octo_post):
             else:
                 d = meta['date']
                 # strings sometimes result from the yaml when it has no seconds
-                if not isinstance(d, datetime.datetime):
+                if not isinstance(d, datetime.date):
                     d = dateutil.parser.parse(d)
                 meta['date'] = d.strftime("%Y/%m/%d %H:%M")
             meta['slug'] = slug
